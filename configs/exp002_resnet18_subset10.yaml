@@ -1,0 +1,51 @@
+experiment_name: exp002_resnet18_subset10
+
+project:
+  name: BirdPilot
+  task: bird_species_classification
+  stage: pilot_training
+
+data:
+  data_root: data/birds_1pct
+  csv_path: data/birds_1pct/birds_small.csv
+  label_col: labels
+  filepath_col: filepaths
+  split_col: data set
+  num_classes: 524
+
+dataset:
+  train_frac: 0.10
+  valid_frac: 0.5
+  test_frac: 0.5
+  train_size: 8238
+  valid_size: 1048
+  test_size: 1048
+  missing_files_filtered: 8
+
+model:
+  name: resnet18
+  pretrained: true
+  input_size: 160
+
+training:
+  batch_size: 16
+  epochs: 5
+  optimizer: adam
+  lr: 0.001
+  loss: cross_entropy
+  num_workers: 0
+  seed: 42
+  device: mps
+
+augmentation:
+  resize: [160, 160]
+  horizontal_flip: true
+  random_rotation: false
+  color_jitter: false
+  normalize_mean: [0.485, 0.456, 0.406]
+  normalize_std: [0.229, 0.224, 0.225]
+
+outputs:
+  checkpoint_path: outputs/resnet18_pilot_best.pt
+  label_map_path: outputs/idx_to_label.json
+  metrics_csv_path: logs/exp002_metrics.csv
