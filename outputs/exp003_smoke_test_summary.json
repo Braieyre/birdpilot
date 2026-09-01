@@ -1,0 +1,18 @@
+{
+  "experiment_name": "exp003_smoke_test",
+  "device": "cuda",
+  "gpu_name": "NVIDIA GeForce RTX 5090",
+  "best_epoch": 1,
+  "best_valid_acc": 3.125,
+  "test_loss": 6.163994,
+  "test_acc": 4.6875,
+  "num_classes": 524,
+  "train_steps_limit": 20,
+  "valid_steps_limit": 5,
+  "test_steps_limit": 5,
+  "best_checkpoint": "/root/autodl-tmp/birdpilot/outputs/exp003_smoke_test_best.pt",
+  "last_checkpoint": "/root/autodl-tmp/birdpilot/outputs/exp003_smoke_test_last.pt",
+  "metrics_csv": "/root/autodl-tmp/birdpilot/logs/exp003_smoke_test_metrics.csv",
+  "label_map": "/root/autodl-tmp/birdpilot/outputs/exp003_smoke_test_idx_to_label.json",
+  "config_json": "/root/autodl-tmp/birdpilot/configs/exp003_smoke_test.json"
+}

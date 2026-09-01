@@ -1,0 +1,2 @@
+epoch,train_loss,train_acc,valid_loss,valid_acc,lr,time_sec,train_steps_done,valid_steps_done,train_samples_seen,valid_samples_seen
+1,6.308257,2.8125,6.167184,3.125,0.0003,4.47,20,5,1280,320

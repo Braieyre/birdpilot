@@ -1,203 +1,373 @@
 # BirdPilot
 
-BirdPilot is a prototype project for an automatic bird recognition system running on edge devices.
+> 团队新成员请先阅读 [TEAM_ONBOARDING.md](TEAM_ONBOARDING.md)，使用小型入门数据包跑通流程后，再申请完整数据和模型文件。
 
-The goal of this project is to build a complete pipeline:
+BirdPilot is an experimental **Edge AI system for automatic bird species recognition**. The project explores the full engineering pipeline from dataset training to deployable edge inference.
 
-camera → bird detection → bird crop → species classification → edge deployment
+The goal is not only to train a classifier, but to build a **complete autonomous bird observation system** capable of running on embedded hardware.
+
+Planned system pipeline:
+
+```
+Camera
+  ↓
+Bird Detection
+  ↓
+Bird Crop
+  ↓
+Species Classification
+  ↓
+Local Logging
+```
+
+Target deployment platform: **RK3588 edge device**.
 
 ---
 
-# Project Goal
+# Project Objectives
 
-The project aims to develop a lightweight bird recognition system that can run on embedded hardware such as RK3588.
+BirdPilot explores three technical layers:
 
-The system is designed to:
+1. Bird species classification model training
+2. Model portability and inference validation
+3. Edge-device deployment and automated observation
 
-• detect bird visits automatically  
-• classify bird species  
-• store images and labels locally  
-• support lightweight edge deployment  
+The project focuses on **engineering reproducibility and deployment readiness**, rather than proposing new neural network architectures.
 
 ---
 
 # Dataset
 
-Dataset used in this project:
+Dataset used:
 
-Birds 525 Species Dataset
+**Birds-525 Species Dataset**
 
-Dataset statistics:
+Statistics:
 
-Train images: ~84,635  
-Validation images: ~2,625  
-Test images: ~2,625  
-Number of classes: 525  
+| Split | Images |
+|------|------|
+| Train | ~84k |
+| Validation | ~2.6k |
+| Test | ~2.6k |
 
-Images are RGB JPG with resolution:
+Number of classes:
 
-224 × 224
+```
+524 bird species
+```
 
-Each image typically contains a single bird occupying most of the frame.
+Image resolution:
 
----
+```
+224 × 224 RGB
+```
 
-# Model
+Dataset structure:
 
-Baseline model used in the pilot experiments:
+```
+data/birds
+├── train
+├── valid
+├── test
+└── birds.csv
+```
 
-ResNet18 (pretrained)
-
-Final fully connected layer replaced to match the number of bird species.
-
-Loss function:
-
-CrossEntropyLoss
-
-Optimizer:
-
-Adam
-
----
-
-# Training Pipeline
-
-The training pipeline includes:
-
-1. CSV dataset parsing  
-2. missing image filtering  
-3. PyTorch Dataset construction  
-4. DataLoader batching  
-5. ResNet18 training  
-6. validation evaluation  
-7. model checkpoint saving  
-
-Training is first tested on a small subset to validate the pipeline.
+Images typically contain a single bird occupying most of the frame.
 
 ---
 
-# Pilot Experiments
+# Model Architectures
 
-## Experiment 001
+Two CNN architectures were evaluated.
 
-Small pilot training.
+## ResNet18
 
-Dataset:
+Standard convolutional neural network pretrained on ImageNet.
 
-Train: 2245  
-Valid: 1048  
-Test: 1048  
-Classes: 524  
+Advantages:
 
-Training:
+- stable training
+- strong baseline performance
 
-Epochs: 3  
-Batch size: 16  
-Device: Apple MPS  
 
-Results:
+## MobileNetV3
 
-Best validation accuracy:
+Lightweight architecture designed for mobile and embedded inference.
 
-0.4771%
+Advantages:
 
-Test accuracy:
+- significantly smaller parameter count
+- faster inference
+- better suited for edge devices
 
-0.0954%
+---
+
+# Experiment Timeline
+
+## exp001 — Pilot Subset (Mac)
+
+Initial training pipeline validation on a very small dataset subset.
+
+Purpose:
+
+- verify dataset loading
+- validate training scripts
+
+---
+
+## exp002 — Subset Training
+
+Training on a larger subset to observe learning behavior.
 
 Observation:
 
-The pipeline runs successfully but dataset size is too small for meaningful learning.
+- training loss decreases steadily
+- validation accuracy improves
 
 ---
 
-## Experiment 002
+## exp003 — Cloud Smoke Test
 
-Subset10 training.
+Short training run on cloud GPU.
 
-Dataset:
+Purpose:
 
-Train: 8238  
-Valid: 1048  
-Test: 1048  
-Classes: 524  
+- verify CUDA environment
+- confirm dataset loading on remote machine
+- validate training script compatibility
 
-Training:
+---
 
-Epochs: 5  
-Batch size: 16  
-Device: Apple MPS  
+## exp004 — Full Dataset Training (ResNet18)
+
+First full-scale training experiment.
+
+Hardware:
+
+```
+NVIDIA RTX 5090
+```
 
 Results:
 
-Best validation accuracy:
-
-10.21%
-
-Test accuracy:
-
-11.45%
+| Metric | Value |
+|------|------|
+| Best validation accuracy | 97.94% |
+| Test accuracy | 99.20% |
 
 Observation:
 
-Model begins to learn meaningful bird visual features.
-
-Loss decreases consistently and validation accuracy improves across epochs.
+The dataset is extremely clean and classification accuracy becomes very high.
 
 ---
 
-# Training Curves
+## exp005 — Lightweight Model Evaluation (MobileNetV3)
 
-Example training curves generated from experiment logs.
+Goal:
 
-Loss curve:
+Evaluate a model architecture more suitable for edge deployment.
 
-figures/exp002_loss_curve.png
+Hardware:
 
-Accuracy curve:
+```
+NVIDIA RTX 5090
+```
 
-figures/exp002_accuracy_curve.png
+Results:
+
+| Metric | Value |
+|------|------|
+| Best validation accuracy | 98.63% |
+| Test accuracy | 99.24% |
+
+Conclusion:
+
+MobileNetV3 achieves slightly higher validation accuracy while being significantly lighter than ResNet18.
+
+Therefore MobileNetV3 becomes the **primary deployment candidate**.
+
+---
+
+## exp006 — ONNX Export & Runtime Validation
+
+Goal:
+
+Validate model portability outside the PyTorch training environment.
+
+Steps:
+
+- Export PyTorch checkpoint → ONNX
+- Run inference with ONNX Runtime
+- Compare predictions between PyTorch and ONNX
+
+Result:
+
+```
+PyTorch prediction == ONNX prediction
+```
+
+This confirms the correctness of the ONNX export pipeline.
+
+---
+
+## exp007 — Real Image ONNX Benchmark
+
+Goal:
+
+Measure **end-to-end inference latency** using a real image.
+
+Test image:
+
+```
+data/birds/test/ABYSSINIAN GROUND HORNBILL/1.jpg
+```
+
+Prediction:
+
+```
+Predicted index : 2
+Predicted label : ABYSSINIAN GROUND HORNBILL
+```
+
+Measured pipeline:
+
+```
+image load → preprocess → ONNX inference → postprocess
+```
+
+Benchmark result:
+
+| Stage | Average Latency |
+|------|------|
+| Image load | 0.500 ms |
+| Preprocess | 0.495 ms |
+| Model inference | 5.680 ms |
+| Postprocess | 0.015 ms |
+| **Total latency** | **6.690 ms** |
+
+Approx throughput:
+
+```
+~149 FPS (single-image inference)
+```
+
+Observation:
+
+- Most latency comes from model inference (~5.7 ms).
+- Data loading and preprocessing overhead are minimal.
+
+Conclusion:
+
+The ONNX model is efficient and suitable for edge-side inference.
+
+---
+
+# Model Comparison
+
+| Model | Params | Valid Acc | Test Acc | Deployment Priority |
+|------|------|------|------|------|
+| ResNet18 | ~11M | 97.94% | 99.20% | Secondary |
+| MobileNetV3 | ~5.4M | 98.63% | 99.24% | Primary |
+
+MobileNetV3 provides the best balance between **accuracy and computational cost**.
 
 ---
 
 # Project Structure
-```text
+
+```
 birdpilot
 ├── configs
 ├── data
 ├── experiments
-├── figures
 ├── logs
-├── notebooks
 ├── outputs
 ├── src
+│   ├── train_full.py
+│   ├── export_onnx.py
+│   ├── test_onnx.py
+│   ├── test_torch.py
+│   └── benchmark_onnx.py
+├── deploy
+│   ├── onnx
+│   └── rk3588
 └── README.md
 ```
----
-
-# Next Steps
-
-Next development stages:
-
-• train on full dataset using cloud GPU  
-• test different backbone models  
-• export model to ONNX  
-• deploy inference on RK3588  
-• integrate camera pipeline  
 
 ---
 
-# Long-term Vision
+# Current Project Status
 
-The final system will be able to run autonomously:
+Training pipeline        ✔
 
-camera monitoring → bird detection → species recognition → local logging
+Model selection          ✔
 
-forming a lightweight intelligent bird observation system.
+ONNX export              ✔
+
+Inference validation     ✔
+
+Real-image benchmark     ✔
+
+Next stage:
+
+```
+Edge-device deployment (RK3588)
+```
+
+---
+
+# Deployment Roadmap
+
+Planned pipeline:
+
+```
+PyTorch (.pt)
+   ↓
+ONNX
+   ↓
+RKNN conversion
+   ↓
+RK3588 inference
+   ↓
+Camera integration
+   ↓
+Automatic bird observation system
+```
+
+Upcoming tasks:
+
+1. Install RKNN Toolkit
+2. Convert ONNX → RKNN
+3. Measure RK3588 inference latency
+4. Integrate camera input
+5. Build autonomous bird monitoring device
+
+---
+
+# Long-Term Vision
+
+BirdPilot aims to build a lightweight autonomous bird observation system:
+
+```
+camera monitoring
+   ↓
+bird detection
+   ↓
+species classification
+   ↓
+automatic logging
+```
+
+The project explores the intersection of:
+
+- Computer Vision
+- Edge AI
+- Embedded Systems
 
 ---
 
 # Author
 
-BirdPilot research prototype  
-Computer Vision / Edge AI exploration project
+BirdPilot
+
+Edge AI / Computer Vision Engineering Exploration

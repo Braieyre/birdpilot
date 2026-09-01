@@ -282,21 +282,51 @@ def build_dataloaders(cfg: TrainConfig, device: torch.device):
 # =========================================================
 # 6. 构建模型
 # =========================================================
+from torchvision.models import (
+    resnet18,
+    ResNet18_Weights,
+    mobilenet_v3_large,
+    MobileNet_V3_Large_Weights,
+)
+
 def build_model(cfg: TrainConfig, num_classes: int) -> nn.Module:
-    if cfg.model_name.lower() != "resnet18":
-        raise ValueError(f"当前脚本仅实现 resnet18，收到: {cfg.model_name}")
 
-    if cfg.pretrained:
-        weights = ResNet18_Weights.DEFAULT
-        model = models.resnet18(weights=weights)
+    name = cfg.model_name.lower()
+
+    # ------------------------------
+    # ResNet18
+    # ------------------------------
+    if name == "resnet18":
+
+        if cfg.pretrained:
+            weights = ResNet18_Weights.DEFAULT
+            model = resnet18(weights=weights)
+        else:
+            model = resnet18(weights=None)
+
+        in_features = model.fc.in_features
+        model.fc = nn.Linear(in_features, num_classes)
+
+        return model
+
+    # ------------------------------
+    # MobileNetV3 Large
+    # ------------------------------
+    elif name == "mobilenetv3":
+
+        if cfg.pretrained:
+            weights = MobileNet_V3_Large_Weights.DEFAULT
+            model = mobilenet_v3_large(weights=weights)
+        else:
+            model = mobilenet_v3_large(weights=None)
+
+        in_features = model.classifier[3].in_features
+        model.classifier[3] = nn.Linear(in_features, num_classes)
+
+        return model
+
     else:
-        model = models.resnet18(weights=None)
-
-    in_features = model.fc.in_features
-    model.fc = nn.Linear(in_features, num_classes)
-
-    return model
-
+        raise ValueError(f"Unsupported model: {cfg.model_name}")
 
 # =========================================================
 # 7. 单轮训练 / 验证

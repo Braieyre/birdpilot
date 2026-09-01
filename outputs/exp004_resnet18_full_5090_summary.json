@@ -1,0 +1,15 @@
+{
+  "experiment_name": "exp004_resnet18_full_5090",
+  "device": "cuda",
+  "gpu_name": "NVIDIA GeForce RTX 5090",
+  "best_epoch": 28,
+  "best_valid_acc": 97.9389,
+  "test_loss": 1.051076,
+  "test_acc": 99.1985,
+  "num_classes": 524,
+  "best_checkpoint": "/root/birdpilot/outputs/exp004_resnet18_full_5090_best.pt",
+  "last_checkpoint": "/root/birdpilot/outputs/exp004_resnet18_full_5090_last.pt",
+  "metrics_csv": "/root/birdpilot/logs/exp004_resnet18_full_5090_metrics.csv",
+  "label_map": "/root/birdpilot/outputs/exp004_resnet18_full_5090_idx_to_label.json",
+  "config_json": "/root/birdpilot/configs/exp004_resnet18_full_5090.json"
+}

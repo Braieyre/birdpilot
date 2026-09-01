@@ -1,0 +1,10 @@
+## Model info
+- model: MobileNetV3
+- task: bird species classification
+- num_classes: 524
+- input_size: 224x224
+- input_layout: NCHW
+- color_space: RGB
+- normalization: /255 + mean/std
+- labels: Birds-525 class order
+- source_model: models/mobilenetv3_best.onnx

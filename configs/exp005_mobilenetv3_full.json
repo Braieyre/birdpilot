@@ -1,0 +1,17 @@
+{
+  "experiment_name": "exp005_mobilenetv3_full",
+  "data_root": "data/birds",
+  "csv_path": "data/birds/birds.csv",
+  "model_name": "mobilenetv3",
+  "pretrained": true,
+  "img_size": 224,
+  "batch_size": 256,
+  "epochs": 30,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "label_smoothing": 0.1,
+  "num_workers": 8,
+  "seed": 42,
+  "use_amp": true,
+  "save_last_checkpoint": true
+}

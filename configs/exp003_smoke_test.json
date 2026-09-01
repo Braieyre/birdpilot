@@ -1,0 +1,20 @@
+{
+  "experiment_name": "exp003_smoke_test",
+  "data_root": "/root/autodl-tmp/birdpilot/data/birds",
+  "csv_path": "/root/autodl-tmp/birdpilot/data/birds/birds.csv",
+  "model_name": "resnet18",
+  "pretrained": true,
+  "img_size": 224,
+  "batch_size": 64,
+  "epochs": 1,
+  "lr": 0.0003,
+  "weight_decay": 0.0001,
+  "label_smoothing": 0.1,
+  "num_workers": 4,
+  "seed": 42,
+  "use_amp": true,
+  "max_train_steps": 20,
+  "max_valid_steps": 5,
+  "max_test_steps": 5,
+  "save_last_checkpoint": true
+}

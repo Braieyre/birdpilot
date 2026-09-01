@@ -1,35 +1,41 @@
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-
-# Mac
+# macOS
 .DS_Store
-
-# Dataset
-data/
-
-# Training outputs
-logs/
-outputs/
-
-# Model weights
-*.pt
-*.pth
-*.ckpt
-*.onnx
-
-# Jupyter
-.ipynb_checkpoints
-
-# Environment
-venv/
-.venv/
+._*
 
 # IDE
 .idea/
 .vscode/
 
-# Temp
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs and outputs
+logs/*
+!logs/*.csv
+outputs/*
+!outputs/*_idx_to_label.json
+!outputs/*_summary.json
+experiments/*
+!experiments/*.md
+
+# Models
+checkpoints/
+runs/
+*.pt
+*.pth
+*.onnx
+*.h5
+
+# Data
+data/
+dataset/
+datasets/
+
+# Misc
 *.log
-*.tmp

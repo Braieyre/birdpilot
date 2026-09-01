@@ -1,0 +1,17 @@
+{
+  "experiment_name": "exp004_resnet18_full_5090",
+  "data_root": "/root/birdpilot/data/birds",
+  "csv_path": "/root/birdpilot/data/birds/birds.csv",
+  "model_name": "resnet18",
+  "pretrained": true,
+  "img_size": 224,
+  "batch_size": 256,
+  "epochs": 30,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "label_smoothing": 0.1,
+  "num_workers": 8,
+  "seed": 42,
+  "use_amp": true,
+  "save_last_checkpoint": true
+}
