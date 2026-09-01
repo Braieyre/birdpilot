@@ -11,7 +11,7 @@ READY
 ## Delivered
 
 - Lightweight Planner-Executor-Reviewer coordination initialized.
-- Newcomer instructions added in `TEAM_ONBOARDING.md` and linked from `README.md`.
+- Two-member collaboration instructions added in `TEAM_ONBOARDING.md`.
 - Deterministic starter-pack generator added in `src/make_starter_pack.py`.
 - Starter data created outside Git at `team-share/BirdPilot_starter_data_v1.zip`.
 - ONNX runtime dependencies added to `requirements.txt`.

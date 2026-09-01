@@ -1,6 +1,6 @@
 # BirdPilot
 
-> 团队新成员请先阅读 [TEAM_ONBOARDING.md](TEAM_ONBOARDING.md)，使用小型入门数据包跑通流程后，再申请完整数据和模型文件。
+[English](README.md) | [中文](README_CN.md)
 
 BirdPilot is an experimental **Edge AI system for automatic bird species recognition**. The project explores the full engineering pipeline from dataset training to deployable edge inference.
 
@@ -24,7 +24,7 @@ Target deployment platform: **RK3588 edge device**.
 
 ---
 
-# Project Objectives
+## Project Objectives
 
 BirdPilot explores three technical layers:
 

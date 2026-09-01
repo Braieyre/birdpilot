@@ -14,15 +14,15 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 
 ## Current Reality
 
-- The committed local repository and Gitee `main` are at `25d5804`.
-- GitHub `main` is older and needs synchronization.
+- The committed local repository and private Gitee `main` are synchronized.
+- Public GitHub contains the same approved source snapshot without private data or model binaries.
 - MobileNetV3 training, ONNX export, and a local Mac benchmark have historical artifacts.
 - RKNN conversion, device inference, degradation training, and outdoor validation are not yet complete.
 - Full data, the primary `.pt` checkpoint, and ONNX outputs are intentionally excluded from Git.
 
 ## Roadmap
 
-1. Give new members a synchronized repository, a reproducible starter-data package, and a clear onboarding path.
+1. Give the two collaborating members a synchronized repository, a reproducible starter-data package, and a clear starting point.
 2. Establish a fixed degradation benchmark and quality-review process before changing model weights.
 3. Train and compare the clean baseline and degradation-augmented model without touching the held-out test set.
 4. Deploy the accepted model to the RK3588S and complete a desk-based observation loop.
@@ -30,13 +30,13 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 
 ## Work Packages
 
-### WP-01: Shared repository and newcomer starter package
+### WP-01: Shared repository and two-member starter package
 
 - Status: DONE
-- Outcome: Both repositories expose the same safe code snapshot, and new members can understand the project and inspect a small representative dataset without receiving the full private workspace.
+- Outcome: Both repositories expose the same safe code snapshot, and the two collaborating members can understand the project and inspect a small representative dataset without receiving the full private workspace.
 - Acceptance:
-  - Gitee and GitHub `main` resolve to the same new commit.
-  - The repository contains newcomer instructions and a deterministic starter-pack generator.
+  - Gitee and GitHub expose the same approved source snapshot, excluding private artifacts.
+- The repository contains two-member collaboration instructions and a deterministic starter-pack generator.
   - A starter-data ZIP is generated from local `data/birds`, contains 8 classes with separate train/valid/test samples, and passes manifest/file-count checks.
   - Full data, `.pt` weights, and ONNX binaries remain outside Git.
   - The working tree is clean after the synchronized commit.
@@ -86,5 +86,5 @@ Execute `WP-02` only.
 ## Key Decisions
 
 - Repository first, starter data second, full data/model access only after each member runs the starter workflow.
-- New members work together on one degradation outcome but have separate ownership: generation/code versus QA/evidence.
+- The two members work together on one degradation outcome but have separate ownership: generation/code versus QA/evidence.
 - The project lead retains model-training decisions and all device operations while the device remains in their possession.
