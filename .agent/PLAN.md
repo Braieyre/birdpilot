@@ -32,7 +32,7 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 
 ### WP-01: Shared repository and newcomer starter package
 
-- Status: REVIEW
+- Status: DONE
 - Outcome: Both repositories expose the same safe code snapshot, and new members can understand the project and inspect a small representative dataset without receiving the full private workspace.
 - Acceptance:
   - Gitee and GitHub `main` resolve to the same new commit.
@@ -81,7 +81,7 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 
 ## Current Directive
 
-Review `WP-01` only.
+Execute `WP-02` only.
 
 ## Key Decisions
 

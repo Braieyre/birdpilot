@@ -2,11 +2,11 @@
 
 ## Active Package
 
-`WP-01`
+`WP-02`
 
 ## State
 
-REVIEW
+READY
 
 ## Delivered
 
@@ -29,7 +29,12 @@ REVIEW
 - Visual sample: one image from each of the 8 classes inspected and correctly labelled.
 - Python syntax: `src/make_starter_pack.py` and `src/recover_eval.py` compiled successfully using the bundled Python runtime.
 - `src/recover_eval.py --skip-test`: not runtime-verified because the available bundled environment does not include PyTorch; PyTorch remains declared in `requirements.txt`.
-- Still unverified: final repository diff, commit, and both pushes.
+- Local commits: `769b960`, `3e74a99`, `72c8f19`.
+- Gitee `main`: `72c8f196937ab6bd2c6659e3c438056eae4a12ca`.
+- Public GitHub `main`: `b5a664c1bd48eecd17a39e51a3ab6559e388aae4` (API-created ordinary commit from the prior public history).
+- GitHub tree verified to contain onboarding and experiment evidence, with no `data/` or `models/` paths.
+- The local H5 model remains on disk for private use but is no longer tracked.
+- Both repositories are public-code/private-data aligned; their commit histories differ because GitHub started from an older independent history.
 
 ## Deviations
 
@@ -43,7 +48,7 @@ REVIEW
 
 ## Next Action
 
-Review the repository diff, commit the accepted changes, and synchronize Gitee and GitHub.
+Assign WP-02: jointly define a 20-image, five-degradation pilot; give one junior ownership of generation/code and the other ownership of visual QA/evidence; wait for lead acceptance before scaling or training.
 
 ## Blocker
 
