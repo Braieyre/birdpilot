@@ -308,6 +308,10 @@ Inference validation     ✔
 
 Real-image benchmark     ✔
 
+QuarkPi-CA2 development access (USB OTG/ADB rescue and cross-network Tailscale SSH)     ✔
+
+This access milestone establishes a reproducible maintenance path to the real board. It does not count as RKNN inference, camera-loop, or field evidence. See [deploy/rk3588/REMOTE_ACCESS_CN.md](deploy/rk3588/REMOTE_ACCESS_CN.md) for the verified setup and evidence boundary.
+
 Next stage:
 
 ```

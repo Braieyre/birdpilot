@@ -17,6 +17,7 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 - The committed local repository and private Gitee `main` are synchronized.
 - Public GitHub contains the same approved source snapshot without private data or model binaries.
 - MobileNetV3 training, ONNX export, and a local Mac benchmark have historical artifacts.
+- A real QuarkPi-CA2 has been identified as ARM64 Debian 11 and its development path is verified: USB OTG exposes an ADB rescue shell, phone USB tethering provides temporary networking, and cross-network Tailscale SSH works in userspace-networking mode because the current 5.10.209 kernel lacks usable TUN support.
 - RKNN conversion, device inference, degradation training, and outdoor validation are not yet complete.
 - Full data, the primary `.pt` checkpoint, and ONNX outputs are intentionally excluded from Git.
 
@@ -69,7 +70,7 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 - Outcome: The accepted model runs on the held RK3588S device and records image, time, predicted class, confidence, and latency in a desk-based demonstration.
 - Acceptance: To be made precise after WP-03 selects the model.
 - Out of scope: Long-duration unattended outdoor operation.
-- Dependencies / risks: RKNN conversion and device runtime compatibility remain unverified.
+- Dependencies / risks: Remote board access is available, but RKNN conversion and device runtime compatibility remain unverified. The current CA2 kernel requires Tailscale userspace networking; long-term deployment must also address the default system credential and high-privilege physical ADB access.
 
 ### WP-05: Outdoor validation
 
@@ -88,3 +89,4 @@ Execute `WP-02` only.
 - Repository first, starter data second, full data/model access only after each member runs the starter workflow.
 - The two members work together on one degradation outcome but have separate ownership: generation/code versus QA/evidence.
 - The project lead retains model-training decisions and all device operations while the device remains in their possession.
+- Treat remote access as development infrastructure only; it does not satisfy any RKNN, inference, camera, or field acceptance criterion.

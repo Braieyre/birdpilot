@@ -135,6 +135,8 @@ birdpilot
 
 已完成：训练流程、模型选择、ONNX 导出、推理一致性验证和本地真实图片基准。
 
+2026-09-18 已在真实 QuarkPi-CA2 上打通开发通道：USB OTG/ADB 可用于现场救援，手机 USB 网络可提供临时联网，Tailscale SSH 已完成跨网远程登录实测。该成果只证明板端接入与维护能力，不代表 RKNN 推理或摄像头闭环已经完成。复现与安全边界见 [deploy/rk3588/REMOTE_ACCESS_CN.md](deploy/rk3588/REMOTE_ACCESS_CN.md)。
+
 现在要做的是：先完成模拟野外退化的固定基准和对照实验，再进行 RK3588S 板端推理、摄像头接入和最终真实野外观测。
 
 两位成员当前的协作方式见 [TEAM_ONBOARDING.md](TEAM_ONBOARDING.md)。
