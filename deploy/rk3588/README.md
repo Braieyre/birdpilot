@@ -12,6 +12,8 @@ Convert ONNX classification model to RKNN and run on RK3588 NPU.
 - [x] Accepted ONNX -> FP16 RKNN conversion
 - [x] RK3588 single-image inference
 - [x] RK3588 20-image ONNX parity and latency benchmark
+- [x] External-scene proxy confirms detection/cropping is required
+- [ ] Detector/crop ONNX-to-RKNN parity
 - [ ] Physical camera enumeration and one-frame capture
 - [ ] Bird/no-bird gating and observation loop
 - [ ] INT8 quantization
@@ -20,7 +22,9 @@ The accepted exp014 model is installed under a versioned path on the real
 board, while the previous FP16 model remains available for rollback. It
 matches ONNX top-1 on 20/20 fixed validation images. The board currently has
 RKISP device nodes but no sensor attached to the media pipeline, so camera
-evidence begins only after a real frame can be captured.
+evidence begins only after a real frame can be captured. Exp016 also shows
+that a complete scene must first pass through bird detection and cropping;
+the closed-set species classifier cannot act as a bird/no-bird gate.
 
 ## First board-baseline workflow
 

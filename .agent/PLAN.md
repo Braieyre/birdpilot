@@ -114,11 +114,11 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 ### WP-04: Device observation loop
 
 - Status: IN_PROGRESS
-- Outcome: The accepted model runs on the held RK3588S device and records image, time, predicted class, confidence, and latency in a desk-based demonstration.
-- Acceptance: The accepted FP16 model must match its ONNX top-1 output on a fixed multi-image batch, remain installed under a versioned path with the old model available for rollback, and process one captured camera frame into a timestamped prediction and latency record.
-- Current result: ONNX/RKNN parity passed 20/20, the versioned model is installed and selected, and timestamped local-image inference passed. Camera capture remains blocked because the current RKISP pipeline has no attached sensor.
+- Outcome: The held RK3588S runs a bird-detection gate followed by the accepted species classifier and records image, time, detection, predicted class, confidence, and latency in a desk-based demonstration.
+- Acceptance: The accepted classifier remains installed under a versioned rollback-safe path; the frozen detector preprocessing/decode/NMS/crop contract passes ONNX/RKNN parity on a multi-scene batch; empty scenes do not reach the closed-set classifier; and one captured camera frame produces a timestamped end-to-end record.
+- Current result: Classifier ONNX/RKNN parity passed 20/20, the versioned model is installed and selected, and timestamped local-image inference passed. Exp016 shows that full-frame species classification fails on external scenes (`24.1%` top-1), while generic detector crops reach `76.1%` among detected scenes and `64.8%` end to end. Camera capture remains blocked because the current RKISP pipeline has no attached sensor.
 - Out of scope: Long-duration unattended outdoor operation.
-- Dependencies / risks: FP16 RKNN inference and 20-class ONNX/RKNN top-1 parity are verified; camera integration and the observation loop remain unverified. The current CA2 kernel requires Tailscale userspace networking; long-term deployment must also address the default system credential and high-privilege physical ADB access.
+- Dependencies / risks: Classifier FP16 RKNN inference and 20-image ONNX/RKNN top-1 parity are verified. Detector RKNN parity, camera integration and the observation loop remain unverified. The provisional COCO detector has licensing and domain limits and is not yet an accepted production model. The current CA2 kernel requires Tailscale userspace networking; long-term deployment must also address the default system credential and high-privilege physical ADB access.
 
 ### WP-05: Outdoor validation
 
@@ -130,7 +130,7 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 
 ## Current Directive
 
-`WP-03` and accepted-model board deployment are complete. Before the physical camera is available, run the bounded exp016 fixed-view proxy probe to measure full-scene versus bird-crop domain shift and expose empty/multi-bird failure behaviour. Do not tune on its holdout or call it camera evidence. Then connect the intended sensor, capture one real frame, and build the timestamped observation loop. INT8 remains a separate follow-up.
+`WP-03` and accepted-classifier board deployment are complete. Exp016 established the required architecture: detect and crop the bird before species classification, and do not use classifier softmax as an empty-frame gate. The active package is to freeze that detector/crop contract, choose a redistribution-safe detector candidate, convert it to RKNN, and verify ONNX/RKNN end-to-end parity on the proxy batch without changing classifier weights. Then connect the intended sensor, capture one real frame, and build the timestamped observation loop. INT8 remains a separate follow-up.
 
 ## Key Decisions
 

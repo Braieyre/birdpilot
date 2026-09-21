@@ -2,11 +2,11 @@
 
 ## Active Package
 
-`WP-04`: accepted model installed; camera observation loop pending.
+`WP-04`: classifier installed; detector/crop stage required before the camera observation loop.
 
 ## State
 
-BLOCKED_BY_CAMERA_SENSOR
+READY
 
 ## Robustness decision
 
@@ -33,16 +33,25 @@ BLOCKED_BY_CAMERA_SENSOR
 - The accepted model is installed at `/opt/birdpilot/models/exp014_augmented_seed42_epoch9_fp_rk3588_runtime200.rknn`; `/opt/birdpilot/models/current_fp16.rknn` points to it. The old M0 model remains available for rollback.
 - A recorded 30-run single-image inference predicted `HAMERKOP` correctly. Median latency is `22.6942 ms` and P95 is `29.9831 ms`; evidence SHA-256 is `4b42a8c31ebe7f5ec99403e0d84d4d4e5a24a7e705b42e3c819040ff14a5920b`.
 
+## External-scene proxy evidence
+
+- The licensed iNaturalist candidate pool contains 54 images across 18 model classes. Full-frame classification is `13/54 = 24.1%` top-1.
+- A provisional YOLOv8n COCO bird detector finds birds in `46/54 = 85.2%` of those scenes. Selecting the highest-confidence crop per scene gives `35/46 = 76.1%` classification top-1; counting detector misses as failures gives `35/54 = 64.8%` end-to-end success.
+- Detector crops recover 23 full-frame classification failures and break none of the 13 full-frame successes in this pool. This is directional external-proxy evidence, not a frozen benchmark or camera result.
+- On 20 Wellington frames carrying an empty sequence label, full-frame classifier confidence averages `16.5%` and reaches `82.6%`; classifier confidence therefore cannot gate empty scenes. The generic detector produces one bird-like box (`1/20`), which remains a visually ambiguous label conflict because annotations are sequence-level.
+- The Wellington bird-labelled sample cannot yield a valid recall number: only 6 of 20 selected frames produce a bird box, but the sequence label may not describe that individual frame.
+- Decision: use `detector -> crop -> species classifier`. No classifier retraining or GPU is indicated by this gate.
+
 ## Working State
 
 - L20 return artifacts are present under ignored `outputs/`; the original downloaded archive remains outside the repository in `L20返回/`.
-- Source changes add explicit final-test gating, partition-aware evaluation, and ONNX external-data hashes in export manifests.
-- Existing untracked `docs/` is unrelated and remains untouched. No project commit has been pushed.
+- Source changes add licensed Wellington candidate collection, generic COCO bird detection/cropping, and external full-scene/crop evaluation. Network images, model binaries and generated outputs remain ignored.
+- Existing untracked `docs/` is unrelated and remains untouched.
 
 ## Next Action
 
-While the camera is unavailable, build the bounded exp016 licensed fixed-view proxy set and compare full-scene versus manual bird-crop inference without changing model weights. Then connect and enumerate the intended camera sensor, capture one real frame, and persist the image, timestamp, prediction, and latency record.
+Freeze the detector preprocessing, decode, NMS and crop contract; select a redistribution-safe detector candidate; convert it to RKNN; and verify ONNX/RKNN box, crop and final-classification parity on the proxy batch. Then connect and enumerate the intended camera sensor, capture one real frame, and persist the timestamped end-to-end record.
 
-## Blocker
+## Physical-camera boundary
 
 The board is online and NPU inference is accepted. RKISP device nodes exist, but one-frame capture fails and the kernel reports `get remote terminal sensor failed -19`; no usable camera sensor is currently attached to the media pipeline.

@@ -319,10 +319,10 @@ The accepted augmented model reaches 99.20% clean and 98.50% mean synthetic-degr
 Next stage:
 
 ```
-Fixed-camera proxy probe, then physical camera integration
+Detector/crop RKNN parity, then physical camera integration
 ```
 
-The current board exposes RKISP nodes but no attached sensor. Before physical camera work, a small licensed fixed-view proxy set will compare full-scene and bird-crop inference and include empty, multi-bird, distant, and partially occluded frames. This is an engineering probe for the detection and trigger design, not camera or outdoor evidence. See [exp016](experiments/exp016_fixed_view_proxy_plan.md).
+The current board exposes RKISP nodes but no attached sensor. The exp016 proxy probe has already established the architecture direction: full-frame classification reaches only 24.1% top-1 on 54 external bird images, while the highest-confidence generic-detector crop reaches 76.1% on detected scenes and 64.8% when detector misses count as failures. Classifier confidence also reaches 82.6% on an empty-labelled frame, so it cannot serve as a presence gate. The next software gate is detector/crop ONNX-to-RKNN parity. This remains external proxy evidence, not camera or outdoor evidence. See [exp016](experiments/exp016_fixed_view_proxy_plan.md).
 
 ---
 
@@ -341,15 +341,19 @@ RK3588 inference
    ↓
 Camera integration
    ↓
+Bird detection and empty-frame gating
+   ↓
+Bird crop and species classification
+   ↓
 Automatic bird observation system
 ```
 
 Upcoming tasks:
 
-1. Build the licensed fixed-camera proxy probe
+1. Freeze the detector/crop contract and verify ONNX/RKNN parity
 2. Connect and enumerate the intended camera sensor
-3. Capture and classify one timestamped real frame
-4. Add bird/no-bird gating and a short observation loop
+3. Capture and process one timestamped real frame end to end
+4. Add a short observation loop
 5. Run bounded outdoor validation
 
 ---
