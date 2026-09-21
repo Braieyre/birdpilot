@@ -20,6 +20,14 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import Dataset, DataLoader
 from torchvision import models, transforms
 from torchvision.models import ResNet18_Weights
+try:
+    from generate_degradation_pilot import FAMILIES as DEGRADATION_FAMILIES
+    from generate_degradation_pilot import LEVELS as DEGRADATION_LEVELS
+    from generate_degradation_pilot import degrade
+except ModuleNotFoundError:
+    from src.generate_degradation_pilot import FAMILIES as DEGRADATION_FAMILIES
+    from src.generate_degradation_pilot import LEVELS as DEGRADATION_LEVELS
+    from src.generate_degradation_pilot import degrade
 
 # 允许读取部分轻微损坏的图片，减少训练中断概率
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -76,6 +84,12 @@ class TrainConfig:
 
     # 是否保存最后一轮 checkpoint
     save_last_checkpoint: bool = True
+
+    # 鲁棒性对照只在训练集随机施加已固定的 v1 退化；验证集保持干净。
+    degradation_v1_probability: float = 0.0
+
+    # 烟雾/模型选择阶段不得读取最终测试集。
+    evaluate_test: bool = True
 
 
 # =========================================================
@@ -153,11 +167,31 @@ class BirdDataset(Dataset):
 # =========================================================
 # 4. 数据增强 / 预处理
 # =========================================================
+class RandomDegradationV1:
+    """Apply one accepted v1 degradation to a training image with a fixed rate."""
+
+    def __init__(self, probability: float) -> None:
+        if not 0.0 <= probability <= 1.0:
+            raise ValueError("degradation probability must be between 0 and 1")
+        self.probability = probability
+
+    def __call__(self, image: Image.Image) -> Image.Image:
+        if random.random() >= self.probability:
+            return image
+        family = random.choice(DEGRADATION_FAMILIES)
+        level = random.choice(tuple(DEGRADATION_LEVELS))
+        seed = random.randrange(0, 2**32)
+        return degrade(image, family, DEGRADATION_LEVELS[level][family], seed)
+
+
 def build_transforms(cfg: TrainConfig):
     imagenet_mean = [0.485, 0.456, 0.406]
     imagenet_std = [0.229, 0.224, 0.225]
 
-    train_tf = transforms.Compose([
+    train_steps: list[object] = []
+    if cfg.degradation_v1_probability > 0:
+        train_steps.append(RandomDegradationV1(cfg.degradation_v1_probability))
+    train_steps.extend([
         transforms.RandomResizedCrop(
             cfg.img_size,
             scale=(0.8, 1.0),
@@ -173,6 +207,7 @@ def build_transforms(cfg: TrainConfig):
         transforms.ToTensor(),
         transforms.Normalize(mean=imagenet_mean, std=imagenet_std),
     ])
+    train_tf = transforms.Compose(train_steps)
 
     eval_tf = transforms.Compose([
         transforms.Resize((cfg.img_size, cfg.img_size)),
@@ -186,7 +221,7 @@ def build_transforms(cfg: TrainConfig):
 # =========================================================
 # 5. 构建 DataLoader
 # =========================================================
-def build_dataloaders(cfg: TrainConfig, device: torch.device):
+def build_dataloaders(cfg: TrainConfig, device: torch.device, include_test: bool = True):
     data_root = Path(cfg.data_root)
     csv_path = Path(cfg.csv_path)
 
@@ -226,13 +261,13 @@ def build_dataloaders(cfg: TrainConfig, device: torch.device):
 
     train_df = df[df[SPLIT_COL] == "train"].copy()
     valid_df = df[df[SPLIT_COL] == "valid"].copy()
-    test_df = df[df[SPLIT_COL] == "test"].copy()
+    test_df = df[df[SPLIT_COL] == "test"].copy() if include_test else None
 
     train_tf, eval_tf = build_transforms(cfg)
 
     train_ds = BirdDataset(train_df, data_root, label_to_idx, transform=train_tf)
     valid_ds = BirdDataset(valid_df, data_root, label_to_idx, transform=eval_tf)
-    test_ds = BirdDataset(test_df, data_root, label_to_idx, transform=eval_tf)
+    test_ds = BirdDataset(test_df, data_root, label_to_idx, transform=eval_tf) if test_df is not None else None
 
     use_pin_memory = device.type == "cuda"
     use_persistent_workers = cfg.num_workers > 0
@@ -255,14 +290,16 @@ def build_dataloaders(cfg: TrainConfig, device: torch.device):
         persistent_workers=use_persistent_workers,
     )
 
-    test_loader = DataLoader(
-        test_ds,
-        batch_size=cfg.batch_size,
-        shuffle=False,
-        num_workers=cfg.num_workers,
-        pin_memory=use_pin_memory,
-        persistent_workers=use_persistent_workers,
-    )
+    test_loader = None
+    if test_ds is not None:
+        test_loader = DataLoader(
+            test_ds,
+            batch_size=cfg.batch_size,
+            shuffle=False,
+            num_workers=cfg.num_workers,
+            pin_memory=use_pin_memory,
+            persistent_workers=use_persistent_workers,
+        )
 
     print("=" * 72)
     print("数据集加载完成")
@@ -271,7 +308,7 @@ def build_dataloaders(cfg: TrainConfig, device: torch.device):
     print(f"num_classes    : {len(classes)}")
     print(f"train size     : {len(train_ds)}")
     print(f"valid size     : {len(valid_ds)}")
-    print(f"test size      : {len(test_ds)}")
+    print(f"test size      : {len(test_ds) if test_ds is not None else 'skipped'}")
     print(f"batch_size     : {cfg.batch_size}")
     print(f"num_workers    : {cfg.num_workers}")
     print("=" * 72)
@@ -473,7 +510,9 @@ def train(cfg: TrainConfig):
     else:
         print("当前使用 CPU，速度会比较慢。")
 
-    train_loader, valid_loader, test_loader, label_to_idx, idx_to_label, num_classes = build_dataloaders(cfg, device)
+    train_loader, valid_loader, test_loader, label_to_idx, idx_to_label, num_classes = build_dataloaders(
+        cfg, device, include_test=cfg.evaluate_test
+    )
 
     model = build_model(cfg, num_classes=num_classes)
 
@@ -602,17 +641,21 @@ def train(cfg: TrainConfig):
     print("=" * 72)
     print(f"训练完成，最佳 valid_acc = {best_valid_acc:.4%}（epoch {best_epoch}）")
 
-    checkpoint = torch.load(best_ckpt_path, map_location=device)
-    model.load_state_dict(checkpoint["model_state_dict"])
-
-    test_loss, test_acc = evaluate_test(
-        model=model,
-        loader=test_loader,
-        criterion=criterion,
-        device=device,
-    )
-
-    print(f"test_loss={test_loss:.4f} test_acc={test_acc:.4%}")
+    test_loss = None
+    test_acc = None
+    if cfg.evaluate_test:
+        assert test_loader is not None
+        checkpoint = torch.load(best_ckpt_path, map_location=device)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        test_loss, test_acc = evaluate_test(
+            model=model,
+            loader=test_loader,
+            criterion=criterion,
+            device=device,
+        )
+        print(f"test_loss={test_loss:.4f} test_acc={test_acc:.4%}")
+    else:
+        print("test evaluation skipped by configuration")
     print("=" * 72)
 
     summary = {
@@ -621,8 +664,8 @@ def train(cfg: TrainConfig):
         "gpu_name": torch.cuda.get_device_name(0) if device.type == "cuda" else None,
         "best_epoch": best_epoch,
         "best_valid_acc": round(best_valid_acc * 100, 4),
-        "test_loss": round(test_loss, 6),
-        "test_acc": round(test_acc * 100, 4),
+        "test_loss": round(test_loss, 6) if test_loss is not None else None,
+        "test_acc": round(test_acc * 100, 4) if test_acc is not None else None,
         "num_classes": num_classes,
         "best_checkpoint": str(best_ckpt_path),
         "last_checkpoint": str(last_ckpt_path) if cfg.save_last_checkpoint else None,
@@ -661,6 +704,8 @@ def parse_args():
     parser.add_argument("--no-pretrained", action="store_true")
     parser.add_argument("--no-amp", action="store_true")
     parser.add_argument("--no-save-last", action="store_true")
+    parser.add_argument("--degradation-v1-probability", type=float, default=0.0)
+    parser.add_argument("--skip-test", action="store_true")
 
     return parser.parse_args()
 
@@ -682,6 +727,8 @@ def build_config_from_args(args) -> TrainConfig:
         seed=args.seed,
         use_amp=not args.no_amp,
         save_last_checkpoint=not args.no_save_last,
+        degradation_v1_probability=args.degradation_v1_probability,
+        evaluate_test=not args.skip_test,
     )
 
 

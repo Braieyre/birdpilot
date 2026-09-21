@@ -1,0 +1,19 @@
+{
+  "experiment_name": "exp009_degradation_v1_smoke",
+  "data_root": "/work/data/birds",
+  "csv_path": "outputs/exp009_smoke_split.csv",
+  "model_name": "mobilenetv3",
+  "pretrained": false,
+  "img_size": 224,
+  "batch_size": 8,
+  "epochs": 1,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "label_smoothing": 0.1,
+  "num_workers": 0,
+  "seed": 42,
+  "use_amp": false,
+  "save_last_checkpoint": true,
+  "degradation_v1_probability": 1.0,
+  "evaluate_test": false
+}

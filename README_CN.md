@@ -133,11 +133,11 @@ birdpilot
 
 ## 当前阶段
 
-已完成：训练流程、模型选择、ONNX 导出、推理一致性验证和本地真实图片基准。
+已完成：三随机种子的成对鲁棒性训练、锁定测试集评估、ONNX 导出、FP16 RKNN 转换和真实 RK3588S 部署。
 
-2026-09-18 已在真实 QuarkPi-CA2 上打通开发通道：USB OTG/ADB 可用于现场救援，手机 USB 网络可提供临时联网，Tailscale SSH 已完成跨网远程登录实测。该成果只证明板端接入与维护能力，不代表 RKNN 推理或摄像头闭环已经完成。复现与安全边界见 [deploy/rk3588/REMOTE_ACCESS_CN.md](deploy/rk3588/REMOTE_ACCESS_CN.md)。
+2026-09-21，增强模型在复用测试集上的干净准确率为 99.20%，15 个固定退化条件均值为 98.50%。其 FP16 RKNN 在真实 QuarkPi-CA2 上与 ONNX 完成 20/20 top-1 对齐；单图 30 次 NPU 推理中位延迟为 22.69 ms，P95 为 29.98 ms。完整结果和证据边界见 [exp014 结果](experiments/exp014_robustness_finetune_results.md)。
 
-现在要做的是：先完成模拟野外退化的固定基准和对照实验，再进行 RK3588S 板端推理、摄像头接入和最终真实野外观测。
+当前边界是摄像头：板端 RKISP 节点存在，但未检测到实际传感器。接入摄像头前，项目会先做一个小型“固定机位视角代理集”，比较完整远景与鸟体裁剪结果，并纳入空画面、多鸟和遮挡画面，用于设计检测与触发流程。它只用于工程探针，不替代真实摄像头或户外验收。计划见 [exp016 固定机位视角代理集](experiments/exp016_fixed_view_proxy_plan.md)。
 
 两位成员当前的协作方式见 [TEAM_ONBOARDING.md](TEAM_ONBOARDING.md)。
 
@@ -150,7 +150,7 @@ ONNX
    ↓
 RKNN 转换
    ↓
-RK3588 推理
+RK3588 推理（已通过）
    ↓
 摄像头接入
    ↓

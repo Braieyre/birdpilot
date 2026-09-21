@@ -1,0 +1,19 @@
+{
+  "run_name": "exp014_clean_seed43",
+  "data_root": "data/birds",
+  "csv_path": "data/birds/birds.csv",
+  "label_map_path": "outputs/exp005_mobilenetv3_full_idx_to_label.json",
+  "init_checkpoint": "models/exp005_mobilenetv3_full_best.pt",
+  "robust_validation_manifest": "outputs/degradation_valid_full_v2/manifest.json",
+  "output_root": "outputs/robustness_runs",
+  "seed": 43,
+  "epochs": 10,
+  "batch_size": 256,
+  "num_workers": 8,
+  "learning_rate": 0.0001,
+  "weight_decay": 0.0001,
+  "label_smoothing": 0.1,
+  "degradation_probability": 0.0,
+  "min_clean_valid_accuracy": 0.9808778625954199,
+  "use_amp": true
+}

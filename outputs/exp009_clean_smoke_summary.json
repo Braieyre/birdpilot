@@ -1,0 +1,15 @@
+{
+  "experiment_name": "exp009_clean_smoke",
+  "device": "cpu",
+  "gpu_name": null,
+  "best_epoch": 1,
+  "best_valid_acc": 12.5,
+  "test_loss": null,
+  "test_acc": null,
+  "num_classes": 8,
+  "best_checkpoint": "/work/outputs/exp009_clean_smoke_best.pt",
+  "last_checkpoint": "/work/outputs/exp009_clean_smoke_last.pt",
+  "metrics_csv": "/work/logs/exp009_clean_smoke_metrics.csv",
+  "label_map": "/work/outputs/exp009_clean_smoke_idx_to_label.json",
+  "config_json": "/work/configs/exp009_clean_smoke.json"
+}
