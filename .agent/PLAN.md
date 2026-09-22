@@ -116,9 +116,9 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 - Status: IN_PROGRESS
 - Outcome: The held RK3588S runs a bird-detection gate followed by the accepted species classifier and records image, time, detection, predicted class, confidence, and latency in a desk-based demonstration.
 - Acceptance: The accepted classifier remains installed under a versioned rollback-safe path; the frozen detector preprocessing/decode/NMS/crop contract passes ONNX/RKNN parity on a multi-scene batch; empty scenes do not reach the closed-set classifier; and one captured camera frame produces a timestamped end-to-end record.
-- Current result: Classifier ONNX/RKNN parity passed 20/20, the versioned model is installed and selected, and timestamped local-image inference passed. Exp016 shows that full-frame species classification fails on external scenes (`24.1%` top-1), while generic detector crops reach `76.1%` among detected scenes and `64.8%` end to end. Camera capture remains blocked because the current RKISP pipeline has no attached sensor.
+- Current result: Classifier ONNX/RKNN parity passed 20/20. YOLOX-Nano passes the frozen proxy gates (`44/54` detection, `33/44` crop classification, `33/54` end to end, `0/20` empty triggers), has a Toolkit2 2.0.0 FP16 RKNN, and passes 94/94 local simulator gate/box/crop-class parity. The 24-image board bundle is ready. Camera capture remains blocked because the current RKISP pipeline has no attached sensor.
 - Out of scope: Long-duration unattended outdoor operation.
-- Dependencies / risks: Classifier FP16 RKNN inference and 20-image ONNX/RKNN top-1 parity are verified. Detector RKNN parity, camera integration and the observation loop remain unverified. The provisional COCO detector has licensing and domain limits and is not yet an accepted production model. The current CA2 kernel requires Tailscale userspace networking; long-term deployment must also address the default system credential and high-privilege physical ADB access.
+- Dependencies / risks: Classifier FP16 RKNN inference and 20-image real-board parity are verified. Detector local simulator parity is verified, while detector real-board parity, camera integration and the observation loop remain unverified. YOLOX-Nano has acceptable redistribution terms but still has external-domain limits. The current CA2 kernel requires Tailscale userspace networking; long-term deployment must also address the default system credential and high-privilege physical ADB access.
 
 ### WP-05: Outdoor validation
 
@@ -130,7 +130,7 @@ Build BirdPilot into a reproducible bird-recognition prototype that first proves
 
 ## Current Directive
 
-`WP-03` and accepted-classifier board deployment are complete. Exp016 established the required architecture: detect and crop the bird before species classification, and do not use classifier softmax as an empty-frame gate. The active package is to freeze that detector/crop contract, choose a redistribution-safe detector candidate, convert it to RKNN, and verify ONNX/RKNN end-to-end parity on the proxy batch without changing classifier weights. Then connect the intended sensor, capture one real frame, and build the timestamped observation loop. INT8 remains a separate follow-up.
+`WP-03`, accepted-classifier deployment, detector selection, FP16 conversion, and local simulator parity are complete. The active package is real-board validation of the fixed 24-image YOLOX-Nano bundle, followed by intended-sensor enumeration, one real camera frame, and the timestamped observation loop. INT8 remains a separate follow-up.
 
 ## Key Decisions
 

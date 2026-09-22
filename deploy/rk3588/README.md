@@ -13,7 +13,8 @@ Convert ONNX classification model to RKNN and run on RK3588 NPU.
 - [x] RK3588 single-image inference
 - [x] RK3588 20-image ONNX parity and latency benchmark
 - [x] External-scene proxy confirms detection/cropping is required
-- [ ] Detector/crop ONNX-to-RKNN parity
+- [x] Detector/crop ONNX-to-RKNN local simulator parity
+- [ ] Detector/crop real-board NPU parity and latency
 - [ ] Physical camera enumeration and one-frame capture
 - [ ] Bird/no-bird gating and observation loop
 - [ ] INT8 quantization
@@ -57,3 +58,16 @@ exists because the current Debian image does not expose a matching
 RKNN runtime, or NPU driver changes.
 
 The remote-access milestone is development infrastructure, not RK3588 inference evidence. See [REMOTE_ACCESS_CN.md](REMOTE_ACCESS_CN.md) for the verified environment, the CA2 kernel/TUN limitation, the userspace-networking workaround, security gates, and the path from one prototype to fleet provisioning.
+
+## YOLOX-Nano detector
+
+`convert_yolox.py` freezes the RK3588 FP16 conversion contract for the official
+416-pixel YOLOX-Nano ONNX model. `check_yolox_parity.py` rebuilds the same FP16
+graph in Toolkit2 2.0.0's simulator and compares the gate, highest-score box,
+IoU, stabilized crop, and final classifier top-1. Toolkit2 2.0.0 cannot start
+its simulator from an already exported RKNN, so the exported artifact hash is
+recorded while the identical ONNX/config graph is rebuilt in memory.
+
+The ignored `outputs/birdpilot_exp016_board_bundle.tar.gz` contains both FP16
+models, 24 licensed acceptance images, reference outputs, scripts, manifests,
+and `SHA256SUMS`. After extraction on the board, run the command in its README.

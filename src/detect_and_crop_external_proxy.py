@@ -16,13 +16,34 @@ import numpy as np
 import onnxruntime as ort
 from PIL import Image, ImageDraw
 
+from yolox_contract import decode_birds as decode_yolox_contract
+from yolox_contract import padded_box as padded_yolox_box
+from yolox_contract import preprocess_onnx as preprocess_yolox_onnx
+
 
 COCO_BIRD_INDEX = 14
+DETECTOR_METADATA = {
+    "yolov8-coco": {
+        "name": "YOLOv8n pretrained on COCO",
+        "license": "AGPL-3.0",
+        "source": "https://github.com/ultralytics/ultralytics",
+    },
+    "yolox-coco": {
+        "name": "YOLOX pretrained on COCO",
+        "license": "Apache-2.0",
+        "source": "https://github.com/Megvii-BaseDetection/YOLOX",
+    },
+}
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--detector", type=Path, required=True)
+    parser.add_argument(
+        "--detector-format",
+        choices=sorted(DETECTOR_METADATA),
+        default="yolov8-coco",
+    )
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--image-root", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -40,15 +61,17 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def letterbox(image: np.ndarray, size: int) -> tuple[np.ndarray, float, int, int]:
+def letterbox(
+    image: np.ndarray, size: int, *, centered: bool
+) -> tuple[np.ndarray, float, int, int]:
     height, width = image.shape[:2]
     scale = min(size / height, size / width)
     resized_width, resized_height = round(width * scale), round(height * scale)
     resized = np.asarray(
         Image.fromarray(image).resize((resized_width, resized_height), Image.Resampling.BILINEAR)
     )
-    left = (size - resized_width) // 2
-    top = (size - resized_height) // 2
+    left = (size - resized_width) // 2 if centered else 0
+    top = (size - resized_height) // 2 if centered else 0
     canvas = np.full((size, size, 3), 114, dtype=np.uint8)
     canvas[top : top + resized_height, left : left + resized_width] = resized
     return canvas, scale, left, top
@@ -79,7 +102,7 @@ def nms(boxes: np.ndarray, scores: np.ndarray, threshold: float) -> list[int]:
     return kept
 
 
-def decode_birds(
+def decode_yolov8_birds(
     output: np.ndarray,
     confidence: float,
     iou: float,
@@ -126,7 +149,37 @@ def decode_birds(
     return detections
 
 
+def decode_yolox_birds(
+    output: np.ndarray,
+    confidence: float,
+    iou: float,
+    input_size: int,
+    scale: float,
+    width: int,
+    height: int,
+) -> list[dict[str, object]]:
+    return decode_yolox_contract(
+        output, confidence, iou, input_size, scale, width, height
+    )
+
+
+def preprocess_detector(
+    image: np.ndarray, size: int, detector_format: str
+) -> tuple[np.ndarray, float, int, int]:
+    yolox = detector_format == "yolox-coco"
+    canvas, scale, left, top = letterbox(image, size, centered=not yolox)
+    if yolox:
+        batch, scale = preprocess_yolox_onnx(image, size)
+        left = top = 0
+    else:
+        batch = (
+            np.ascontiguousarray(canvas.transpose(2, 0, 1)[None], dtype=np.float32) / 255.0
+        )
+    return batch, scale, left, top
+
+
 def padded_box(box: list[float], width: int, height: int, padding: float) -> tuple[int, int, int, int]:
+    """Legacy pixel-exact crop for YOLOv8 proxy results."""
     x1, y1, x2, y2 = box
     pad_x = (x2 - x1) * padding
     pad_y = (y2 - y1) * padding
@@ -152,6 +205,9 @@ def main() -> None:
     session = ort.InferenceSession(str(args.detector), providers=["CPUExecutionProvider"])
     input_meta = session.get_inputs()[0]
     input_size = int(input_meta.shape[2])
+    if input_meta.shape[3] != input_size:
+        raise ValueError(f"Detector input must be square: {input_meta.shape}")
+    detector_metadata = DETECTOR_METADATA[args.detector_format]
     output_crops = args.output_dir / "crops"
     output_annotated = args.output_dir / "annotated"
     output_crops.mkdir(parents=True)
@@ -167,17 +223,33 @@ def main() -> None:
         pil_image = Image.open(image_path).convert("RGB")
         image = np.asarray(pil_image)
         height, width = image.shape[:2]
-        canvas, scale, left, top = letterbox(image, input_size)
-        batch = np.ascontiguousarray(canvas.transpose(2, 0, 1)[None], dtype=np.float32) / 255.0
-        output = session.run(None, {input_meta.name: batch})[0]
-        detections = decode_birds(
-            output, args.confidence, args.iou, scale, left, top, width, height
+        batch, scale, left, top = preprocess_detector(
+            image, input_size, args.detector_format
         )
+        output = session.run(None, {input_meta.name: batch})[0]
+        if args.detector_format == "yolox-coco":
+            detections = decode_yolox_birds(
+                output,
+                args.confidence,
+                args.iou,
+                input_size,
+                scale,
+                width,
+                height,
+            )
+        else:
+            detections = decode_yolov8_birds(
+                output, args.confidence, args.iou, scale, left, top, width, height
+            )
 
         annotated = pil_image.copy()
         draw = ImageDraw.Draw(annotated)
         for detection_index, detection in enumerate(detections):
-            crop_box = padded_box(detection["box_xyxy"], width, height, args.padding)
+            crop_box = (
+                padded_yolox_box(detection["box_xyxy"], width, height, args.padding)
+                if args.detector_format == "yolox-coco"
+                else padded_box(detection["box_xyxy"], width, height, args.padding)
+            )
             crop_name = f"{Path(file_name).stem}_bird_{detection_index:02d}.jpg"
             crop_path = output_crops / crop_name
             pil_image.crop(crop_box).save(crop_path, quality=95)
@@ -195,6 +267,8 @@ def main() -> None:
                     "source_category": record.get("source_category", "licensed_species_candidate"),
                     "class_index": record.get("class_index"),
                     "model_label": record.get("model_label"),
+                    "detector_format": args.detector_format,
+                    "detector_name": detector_metadata["name"],
                     "detector_confidence": detection["confidence"],
                     "detector_box_xyxy": detection["box_xyxy"],
                     "crop_box_xyxy": list(crop_box),
@@ -206,10 +280,15 @@ def main() -> None:
         scene_records.append(
             {
                 "candidate_file": file_name,
+                "source_sha256": record["sha256"],
                 "source_category": record.get("source_category", "licensed_species_candidate"),
                 "class_index": record.get("class_index"),
                 "model_label": record.get("model_label"),
                 "bird_detection_count": len(detections),
+                "scene_status": "detected" if detections else "no_detection",
+                "label_conflict_review_status": (
+                    "pending" if detections and record.get("source_category") == "empty" else None
+                ),
                 "detections": detections,
                 "annotated_file": f"annotated/{annotated_name}",
             }
@@ -223,7 +302,11 @@ def main() -> None:
         "purpose": "exp016_generic_coco_bird_detection_and_crop_probe",
         "detector_sha256": sha256(args.detector),
         "source_manifest_sha256": sha256(args.manifest),
-        "detector": "YOLOv8n pretrained on COCO",
+        "detector_format": args.detector_format,
+        "detector": detector_metadata["name"],
+        "detector_license": detector_metadata["license"],
+        "detector_source": detector_metadata["source"],
+        "detector_input_size": input_size,
         "bird_class_index": COCO_BIRD_INDEX,
         "confidence_threshold": args.confidence,
         "nms_iou_threshold": args.iou,

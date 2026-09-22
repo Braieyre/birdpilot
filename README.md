@@ -319,10 +319,10 @@ The accepted augmented model reaches 99.20% clean and 98.50% mean synthetic-degr
 Next stage:
 
 ```
-Detector/crop RKNN parity, then physical camera integration
+Real-board detector parity, then physical camera integration
 ```
 
-The current board exposes RKISP nodes but no attached sensor. The exp016 proxy probe has already established the architecture direction: full-frame classification reaches only 24.1% top-1 on 54 external bird images, while the highest-confidence generic-detector crop reaches 76.1% on detected scenes and 64.8% when detector misses count as failures. Classifier confidence also reaches 82.6% on an empty-labelled frame, so it cannot serve as a presence gate. The next software gate is detector/crop ONNX-to-RKNN parity. This remains external proxy evidence, not camera or outdoor evidence. See [exp016](experiments/exp016_fixed_view_proxy_plan.md).
+The detector is now frozen as Apache-2.0 YOLOX-Nano. It detects 44/54 external bird scenes; the highest-score crop classifies 33/44 correctly and reaches 33/54 end to end, with zero triggers on 20 empty-labelled frames. The Toolkit2 2.0.0 FP16 RKNN passes local simulator parity on all 94 proxy images for gate, best-box selection, and crop classification; the minimum matched-box IoU is 0.9668. Real-board NPU output and latency remain the next gate. This is external proxy evidence, not camera or outdoor evidence. See [exp016](experiments/exp016_fixed_view_proxy_plan.md).
 
 ---
 
@@ -350,7 +350,7 @@ Automatic bird observation system
 
 Upcoming tasks:
 
-1. Freeze the detector/crop contract and verify ONNX/RKNN parity
+1. Upload the fixed 24-image detector bundle and verify real RK3588 NPU parity and latency
 2. Connect and enumerate the intended camera sensor
 3. Capture and process one timestamped real frame end to end
 4. Add a short observation loop

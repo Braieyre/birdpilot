@@ -2,7 +2,7 @@
 
 ## Active Package
 
-`WP-04`: classifier installed; detector/crop stage required before the camera observation loop.
+`WP-04`: local detector package complete; waiting for real-board detector parity.
 
 ## State
 
@@ -35,6 +35,12 @@ READY
 
 ## External-scene proxy evidence
 
+- YOLOX-Nano is the frozen Apache-2.0 detector. It passes all predeclared gates: `44/54 = 81.5%` bird-scene detection, `33/44 = 75.0%` crop classification, `33/54 = 61.1%` end to end, and `0/20` empty triggers.
+- Toolkit2 `2.0.0b0+9bab5682` produced FP16 RKNN SHA-256 `f137e5f85ba5c4fbdc2249c116edc5dab6ff15679d0340993e4223643f78c69e`.
+- Local simulator parity passes 54/54 iNaturalist and 40/40 Wellington scenes for gate and highest-score-box choice. Minimum box IoU is `0.966846`; stabilized crop classifier top-1 agrees for all 94 scenes.
+- The 20-sample failure review attributes 5 to detection, 14 to classifier external-domain shift, and 1 to label/multi-bird ambiguity. No weights were updated.
+- The ignored 24-image board archive is ready at `outputs/birdpilot_exp016_board_bundle.tar.gz`, SHA-256 `c718a93b5fe8e730c357a3fd0adfc8b3ac9cc0861aec5ea4bfe9a9a90b2a25cc`.
+
 - The licensed iNaturalist candidate pool contains 54 images across 18 model classes. Full-frame classification is `13/54 = 24.1%` top-1.
 - A provisional YOLOv8n COCO bird detector finds birds in `46/54 = 85.2%` of those scenes. Selecting the highest-confidence crop per scene gives `35/46 = 76.1%` classification top-1; counting detector misses as failures gives `35/54 = 64.8%` end-to-end success.
 - Detector crops recover 23 full-frame classification failures and break none of the 13 full-frame successes in this pool. This is directional external-proxy evidence, not a frozen benchmark or camera result.
@@ -50,7 +56,7 @@ READY
 
 ## Next Action
 
-Freeze the detector preprocessing, decode, NMS and crop contract; select a redistribution-safe detector candidate; convert it to RKNN; and verify ONNX/RKNN box, crop and final-classification parity on the proxy batch. Then connect and enumerate the intended camera sensor, capture one real frame, and persist the timestamped end-to-end record.
+Upload the fixed 24-image bundle, verify real RK3588 NPU gate/box/classification parity and latency, then connect and enumerate the intended camera sensor, capture one real frame, and persist the timestamped end-to-end record.
 
 ## Physical-camera boundary
 
