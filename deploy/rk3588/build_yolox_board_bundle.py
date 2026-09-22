@@ -113,6 +113,7 @@ def main() -> None:
         args.conversion_manifest: args.output_dir / "detector_conversion_manifest.json",
         Path(__file__).with_name("infer_yolox_rknn.py"): args.output_dir / "infer_yolox_rknn.py",
         Path(__file__).resolve().parents[2] / "src" / "yolox_contract.py": args.output_dir / "yolox_contract.py",
+        Path(__file__).resolve().parents[2] / "src" / "close_view_contract.py": args.output_dir / "close_view_contract.py",
     }
     for source, target in copies.items():
         shutil.copy2(source, target)

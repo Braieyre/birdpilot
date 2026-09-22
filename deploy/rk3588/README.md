@@ -23,9 +23,11 @@ The accepted exp014 model is installed under a versioned path on the real
 board, while the previous FP16 model remains available for rollback. It
 matches ONNX top-1 on 20/20 fixed validation images. The board currently has
 RKISP device nodes but no sensor attached to the media pipeline, so camera
-evidence begins only after a real frame can be captured. Exp016 also shows
-that a complete scene must first pass through bird detection and cropping;
-the closed-set species classifier cannot act as a bird/no-bird gate.
+evidence begins only after a real frame can be captured. Exp016 shows that a
+wide scene needs bird detection and cropping, while exp017 shows that the same
+detector can miss very close or truncated birds. The intended-camera frames
+must therefore compare YOLOX with a fixed ROI and change gate; the closed-set
+species classifier cannot act as a bird/no-bird gate by itself.
 
 ## First board-baseline workflow
 
@@ -33,6 +35,27 @@ The first device milestone is deliberately narrow: use the accepted local
 MobileNetV3 model to recognise a local image on the CA2, then save the raw
 prediction and timing evidence. It does not include camera, field, or outdoor
 claims.
+
+### Close-view route comparison
+
+`infer_yolox_rknn.py` now exposes the same record schema for two routes. Its
+existing command remains the YOLOX path. For a stable close feeder view, save an
+empty frame from the unchanged camera and run the fixed ROI path:
+
+```bash
+python3 infer_yolox_rknn.py \
+  --mode fixed-roi \
+  --classifier-model bird_classifier_fp16.rknn \
+  --labels labels.json \
+  --image-dir camera_samples \
+  --background empty_reference.jpg \
+  --roi 0.15 0.20 0.90 0.95 \
+  --output fixed_roi_results.json
+```
+
+The ROI and change thresholds above are provisional. Freeze them only from
+empty and occupied frames captured by the intended camera without moving it.
+See [exp018](../../experiments/exp018_close_view_dual_route.md).
 
 1. On a conversion machine with RKNN-Toolkit2, generate a deterministic list
    of training-only calibration images with `make_calibration_list.py`. Pass a

@@ -35,6 +35,11 @@ READY
 
 ## External-scene proxy evidence
 
+- exp017 adds a distinct close-feeder-view risk check. A deterministic 24-image sample from the CC BY-NC-ND 4.0 BirdLense feeder crops produced a YOLOX-Nano bird detection on only `6/24` images. Because the source images are mostly pre-cropped detections, this is directional risk evidence rather than a recall benchmark; it shows that exp016's distant/full-bird result cannot be transferred to the intended sub-20 cm composition.
+- The close-view decision is now conditional: retain YOLOX for full-bird frames, but compare it with fixed-ROI classification on the first intended-camera frames. A temporary camera jig and feeding-plane marker are sufficient; the final enclosure is not required.
+- Exp018 implements that comparison as one shared schema on local ONNX and board RKNN entry points. The fixed route records normalized ROI, background hash, mean absolute change, changed-pixel fraction, crop, classification and latency. Defaults are explicitly provisional until intended-camera calibration.
+- Fresh local checks pass all 8 contract tests. The accepted exp014 ONNX (`bdc31c7...`) fixed-ROI smoke opens `1/2` gates (background closed, synthetic subject open), while the unified YOLOX entry reproduces `6/24` on the fixed exp017 sample.
+
 - YOLOX-Nano is the frozen Apache-2.0 detector. It passes all predeclared gates: `44/54 = 81.5%` bird-scene detection, `33/44 = 75.0%` crop classification, `33/54 = 61.1%` end to end, and `0/20` empty triggers.
 - Toolkit2 `2.0.0b0+9bab5682` produced FP16 RKNN SHA-256 `f137e5f85ba5c4fbdc2249c116edc5dab6ff15679d0340993e4223643f78c69e`.
 - Local simulator parity passes 54/54 iNaturalist and 40/40 Wellington scenes for gate and highest-score-box choice. Minimum box IoU is `0.966846`; stabilized crop classifier top-1 agrees for all 94 scenes.
@@ -56,7 +61,7 @@ READY
 
 ## Next Action
 
-Upload the fixed 24-image bundle, verify real RK3588 NPU gate/box/classification parity and latency, then connect and enumerate the intended camera sensor, capture one real frame, and persist the timestamped end-to-end record.
+Attach and enumerate the intended camera, hold it approximately 20 cm from a temporary feeding plane, then capture an unchanged empty reference plus full-subject, partial-subject, occluded and lighting-change frames. Run both routes on the same frames and freeze the route, ROI and thresholds from the recorded comparison.
 
 ## Physical-camera boundary
 

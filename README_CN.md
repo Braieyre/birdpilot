@@ -139,6 +139,10 @@ birdpilot
 
 当前边界仍是摄像头。exp016 已把正式检测候选冻结为 Apache-2.0 的 YOLOX-Nano：54 张外部鸟图检出 `44/54`，检出场景裁剪分类 `33/44`，漏检计失败时端到端 `33/54`，20 张 empty 图零触发。Toolkit2 2.0.0 FP16 RKNN 已生成，本地模拟器在 94 张代理图上保持门控、最高分框和裁剪分类 top-1 一致，匹配框最低 IoU 为 0.9668。详情与证据边界见 [exp016 固定机位视角代理集](experiments/exp016_fixed_view_proxy_plan.md)。这些仍是外部代理数据，不替代真实板端、摄像头或户外验收。
 
+产品概念中的摄像头距进食区不到 20 cm，因此又增加了独立的 [exp017 近距离鸟食器视角代理检查](experiments/exp017_close_feeder_proxy.md)。在 24 张鸟食器近景裁剪图上，YOLOX-Nano 只对 6 张产生 bird 框。这不是正式召回率，但证明 exp016 的远景结果不能直接套用到近距离、大主体或局部截断画面。首批真实相机帧将同时比较 YOLOX 路线和固定 ROI 直接分类；完成这一比较不需要最终外壳。
+
+[exp018 近景双路线入口](experiments/exp018_close_view_dual_route.md) 已实现相同输出结构的 ONNX 与 RKNN 路线：宽景可使用 YOLOX 检测和裁剪，稳定近景可使用固定 ROI 和空背景变化门控。固定 ROI 的默认阈值只通过合成冒烟测试，必须在目标摄像头保持不动时，用真实空画面和主体画面重新冻结。
+
 两位成员当前的协作方式见 [TEAM_ONBOARDING.md](TEAM_ONBOARDING.md)。
 
 ## 部署路线

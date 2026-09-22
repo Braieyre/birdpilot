@@ -324,6 +324,8 @@ Real-board detector parity, then physical camera integration
 
 The detector is now frozen as Apache-2.0 YOLOX-Nano. It detects 44/54 external bird scenes; the highest-score crop classifies 33/44 correctly and reaches 33/54 end to end, with zero triggers on 20 empty-labelled frames. The Toolkit2 2.0.0 FP16 RKNN passes local simulator parity on all 94 proxy images for gate, best-box selection, and crop classification; the minimum matched-box IoU is 0.9668. Real-board NPU output and latency remain the next gate. This is external proxy evidence, not camera or outdoor evidence. See [exp016](experiments/exp016_fixed_view_proxy_plan.md).
 
+A separate close-feeder check found that YOLOX-Nano detects only 6/24 pre-cropped near-view images, so the distant/full-bird result is not transferred to the intended sub-20 cm composition. [Exp018](experiments/exp018_close_view_dual_route.md) provides one result schema for YOLOX and fixed-ROI/background-change routes on ONNX and RKNN. The route and thresholds remain pending intended-camera frames; the final enclosure is not required for that comparison.
+
 ---
 
 # Deployment Roadmap
