@@ -39,3 +39,10 @@ datasets/
 
 # Misc
 *.log
+
+# AI assistant files and working notes stay on this machine
+.claude/
+.agent/
+CLAUDE.md
+AGENTS.md
+notes/
